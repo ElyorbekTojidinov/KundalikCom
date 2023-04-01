@@ -1,0 +1,1 @@
+﻿Server=::1; Port=5432; Database=kundalik; User Id=postgres; Password=Elyorbek;

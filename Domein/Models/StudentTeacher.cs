@@ -12,5 +12,9 @@ namespace Domein.Models
         public required Student StudentId { get; set; }
         public required Teacher TeacherId { get; set; }
         public required Subject SubjectId { get; set; }
+        public override string ToString()
+        {
+            return $"Id: {Id},\n Student: {StudentId},\n Teacher: {TeacherId},\n Subject: {SubjectId}";
+        }
     }
 }

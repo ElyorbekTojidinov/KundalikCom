@@ -9,5 +9,9 @@ namespace Domein.Models
     public class Student : Person
     {
         public int StudentId { get; set; }
+        public override string ToString()
+        {
+            return $"StudentId: {StudentId}, FullName: {FullName}, BirthDate: {BirthDate}, Gender: {Gender}";
+        }
     }
 }

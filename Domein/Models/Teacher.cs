@@ -9,6 +9,10 @@ namespace Domein.Models
     public class Teacher :Person
     {
         public int TeacherId { get; set; }
+        public override string ToString()
+        {
+            return $"TeacherId: {TeacherId}, FullName: {FullName}, BirthDate: {BirthDate}, Gender: {Gender}";
 
+        }
     }
 }

@@ -12,7 +12,7 @@ namespace Infrastructure.Persistence
     {
         private readonly string _connectionString = KundalikDbContext.conString;
 
-        public async Task Create(StudentTeacher obj)
+        public async Task<bool> AddAsync(StudentTeacher obj)
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
@@ -26,11 +26,30 @@ namespace Infrastructure.Persistence
             int res = await cmd.ExecuteNonQueryAsync();
             if (res > 0)
             {
-                Console.WriteLine(" added sucsesfully");
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<bool> AddRageAsync(List<StudentTeacher> obj)
+        {
+            try
+            {
+                foreach (StudentTeacher st in obj)
+                {
+                    await AddAsync(st);
+
+                }
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return false;
             }
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
@@ -41,9 +60,9 @@ namespace Infrastructure.Persistence
             int res = await command.ExecuteNonQueryAsync();
             if (res > 0)
             {
-                Console.WriteLine("Delete succesfully");
+                return true;
             }
-            else Console.WriteLine("Delted failed");
+            else return false;
         }
 
         public async Task<IEnumerable<StudentTeacher>> GetAllAsync()
@@ -60,15 +79,15 @@ namespace Infrastructure.Persistence
                 student_teachers.Add(new()
                 {
                     Id = (int)reader["id"],
-                    StudentId = (Student)reader["student_id"],
-                    TeacherId = (Teacher)reader["teacher_id"],
-                    SubjectId = (Subject)reader["subject_id"]
+                    StudentId = await new DbStudents().GetByIdAsync((int)reader["student_id"]),
+                    TeacherId = await new DbTeacher().GetByIdAsync((int)reader["teacher_id"]),
+                    SubjectId = await new DbSubject().GetByIdAsync((int)reader["subject_id"])
                 });
             }
             return student_teachers;
         }
 
-        public async Task<StudentTeacher> GetAsync(int id)
+        public async Task<StudentTeacher> GetByIdAsync(int id)
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
@@ -81,9 +100,9 @@ namespace Infrastructure.Persistence
             StudentTeacher student_teachers = new()
             {
                 Id = (int)reader["id"],
-                StudentId = (Student)reader["student_id"],
-                TeacherId = (Teacher)reader["teacher_id"],
-                SubjectId = (Subject)reader["subject_id"]
+                StudentId = await new DbStudents().GetByIdAsync((int)reader["student_id"]),
+                TeacherId = await new DbTeacher().GetByIdAsync((int)reader["teacher_id"]),
+                SubjectId = await new DbSubject().GetByIdAsync((int)reader["subject_id"])
             };
 
             return student_teachers;
@@ -96,18 +115,18 @@ namespace Infrastructure.Persistence
             string cmdText = @"update student_teacher set student_id=@StudentId, teacher_id=@TeacherId, subject_id=@SubjectId
                                where  id= @id;";
             NpgsqlCommand cmd = new(cmdText, connection);
-            cmd.Parameters.AddWithValue("@StudentId", entity.StudentId);
-            cmd.Parameters.AddWithValue("@TeacherId", entity.TeacherId);
-            cmd.Parameters.AddWithValue("@SubjectId", entity.SubjectId);
+            cmd.Parameters.AddWithValue("@StudentId", entity.StudentId.StudentId);
+            cmd.Parameters.AddWithValue("@TeacherId", entity.TeacherId.TeacherId);
+            cmd.Parameters.AddWithValue("@SubjectId", entity.SubjectId.SubjectId);
             cmd.Parameters.AddWithValue("@id", entity.Id);
 
             int res = await cmd.ExecuteNonQueryAsync();
             if (res > 0)
             {
-                Console.WriteLine(" updated succesfully");
+                
                 return true;
             }
-            Console.WriteLine(" update failed");
+            
             return false;
         }
     }

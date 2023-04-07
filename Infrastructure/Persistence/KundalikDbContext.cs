@@ -1,9 +1,4 @@
 ﻿using Npgsql;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Persistence
 {
@@ -15,7 +10,7 @@ namespace Infrastructure.Persistence
         {
             try
             {
-                using NpgsqlConnection connection= new NpgsqlConnection(conString);
+                using NpgsqlConnection connection = new NpgsqlConnection(conString);
                 connection.Open();
                 string query = @"create table student 
                                 (
@@ -61,11 +56,11 @@ namespace Infrastructure.Persistence
                 connection.Close();
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
-           
+
         }
 
         public static void CerateDb()
@@ -76,11 +71,12 @@ namespace Infrastructure.Persistence
                 connection.Open();
                 connection.Close();
 
-            }catch(NpgsqlException e)
+            }
+            catch (NpgsqlException e)
             {
-                if(e.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
+                if (e.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
                 {
-                  string  constr2 = conString.Replace("kundalik", "postgres");
+                    string constr2 = conString.Replace("kundalik", "postgres");
                     using NpgsqlConnection connection = new NpgsqlConnection(constr2);
                     connection.Open();
                     string query = "create database kundalik";
@@ -89,11 +85,18 @@ namespace Infrastructure.Persistence
                     InitializeTable();
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
         }
-        public DbStudents Students { get; set; }
+
+
+        public DbStudents Students { get; set; } = new();
+        public DbGreade Grades { get; set; } = new();
+        public DbTeacher Teachers { get; set; } = new();
+        public DbSubject Subjects { get; set; } = new();
+        public DbStudentTeacher StudentTeachers { get; set; } = new();
+
     }
 }

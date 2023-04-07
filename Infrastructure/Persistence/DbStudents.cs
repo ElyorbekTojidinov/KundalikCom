@@ -5,106 +5,172 @@ namespace Infrastructure.Persistence
 {
     public class DbStudents : IRepasitory<Student>
     {
-        private readonly string _connectionString = KundalikDbContext.conString;
-        public async Task Create(Student obj)
-        {
-            using NpgsqlConnection connection = new(_connectionString);
-            connection.Open();
-            string cmdText = @"insert into student(full_name, birth_date, gender)
-                            values(@name, @birth_date, @gender)";
-            NpgsqlCommand cmd = new(cmdText, connection);
-            cmd.Parameters.AddWithValue("@name", obj.FullName);
-            cmd.Parameters.AddWithValue("@birth_date", obj.BirthDate);
-            cmd.Parameters.AddWithValue("@gender", obj.Gender);
+        private static readonly string _connectionString = KundalikDbContext.conString;
 
-            int res = await cmd.ExecuteNonQueryAsync();
-            if (res > 0)
+        public async Task<bool> AddAsync(Student obj)
+        {
+            try
+            { 
+                using NpgsqlConnection connection = new(_connectionString);
+                connection.Open();
+                string cmdText = @"insert into student(student_name, birth_date, gender)
+                            values(@student_name, @birth_date, @gender)";
+                NpgsqlCommand cmd = new(cmdText, connection);
+                cmd.Parameters.AddWithValue("@student_name", obj.FullName);
+                cmd.Parameters.AddWithValue("@birth_date", obj.BirthDate);
+                cmd.Parameters.AddWithValue("@gender", obj.Gender);
+
+                int res = await cmd.ExecuteNonQueryAsync();
+                Console.WriteLine(res);
+                if (res > 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception exception)
             {
-                Console.WriteLine(obj.FullName + " added sucsesfully");
+                Console.WriteLine(exception);
+                return false;
+
             }
         }
 
-
-        public async Task DeleteAsync(int id)
+        public  async Task<bool> AddRageAsync(List<Student> obj)
         {
-            using NpgsqlConnection connection = new(_connectionString);
-            connection.Open();
-            string cmdText = @"dalete from student where student_id = @id";
-            NpgsqlCommand command = new(cmdText, connection);
-            command.Parameters.AddWithValue("@id", id);
-
-            int res = await command.ExecuteNonQueryAsync();
-            if (res > 0)
+            try
             {
-                Console.WriteLine("Delete succesfully");
+
+                foreach (Student students in obj)
+                {
+                    await AddAsync(students);
+                }
+                return true;
             }
-            else Console.WriteLine("Delted failed");
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return false;
+            }
+        }
+
+        public  async Task<bool> DeleteAsync(int id)
+        {
+            try
+            {
+                using NpgsqlConnection connection = new(_connectionString);
+                connection.Open();
+                string cmdText = @"delete from student where student_id = @id";
+                NpgsqlCommand command = new(cmdText, connection);
+                command.Parameters.AddWithValue("@id", id);
+
+                int res = await command.ExecuteNonQueryAsync();
+               
+                if (res > 0)
+                {
+                    return true;
+                }
+                else return false;
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return false;
+            }
 
         }
 
         public async Task<IEnumerable<Student>> GetAllAsync()
         {
-            using NpgsqlConnection connection = new(_connectionString);
-            connection.Open();
-            string cmdText = @"select * from student";
-            NpgsqlCommand cmd = new(cmdText, connection);
-
-            NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
-            ICollection<Student> students = new List<Student>();
-            while (reader.Read())
+            try
             {
-                students.Add(new()
+                await using NpgsqlConnection connection = new(_connectionString);
+                connection.Open();
+                string cmdText = @"select * from student";
+                NpgsqlCommand cmd = new(cmdText, connection);
+
+                NpgsqlDataReader reader = cmd.ExecuteReader();
+                ICollection<Student> students = new List<Student>();
+                while (reader.Read())
                 {
-                    StudentId = (int)reader["student_id"],
-                    FullName = reader["student_name"]?.ToString(),
-                    BirthDate = DateOnly.Parse(reader["birth_date"]?.ToString()),
-                    Gender = (bool)reader["gender"]
-                });
+                    students.Add(new()
+                    {
+                        StudentId = (int)reader["student_id"],
+                        FullName = reader["student_name"]?.ToString(),
+                        BirthDate = DateTime.Parse(reader["birth_date"]?.ToString()),
+                        Gender = (bool)reader["gender"]
+                    });
+                }
+                return students;
             }
-            return students;
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+                return null;
+            }
         }
 
-        public async Task<Student> GetAsync(int id)
+
+
+        public async Task<Student> GetByIdAsync(int id)
         {
+
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
             string cmdText = @"select * from student where student_id=@id";
             NpgsqlCommand cmd = new(cmdText, connection);
             cmd.Parameters.AddWithValue("@id", id);
 
-            NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
-
-            Student student = new()
+            NpgsqlDataReader reader =  cmd.ExecuteReader();
+            Student student = null;
+            while (reader.Read())
             {
-                StudentId = (int)reader["student_id"],
-                FullName = reader["student_name"].ToString(),
-                BirthDate = DateOnly.Parse(reader["birth_date"].ToString()),
-                Gender = (bool)reader["gender"]
-            };
+                student = new()
+                {
+                    StudentId = (int)reader["student_id"],
+                    FullName = reader["student_name"].ToString(),
+                    BirthDate = DateTime.Parse(reader["birth_date"].ToString()),
+                    Gender = (bool)reader["gender"]
+                };
+            }
 
             return student;
+
         }
 
         public async Task<bool> UpdateAsync(Student entity)
         {
-            using NpgsqlConnection connection = new(_connectionString);
-            connection.Open();
-            string cmdText = @"update student set full_name=@name, birth_date=@birth_date, gender=@gender
-                               where student_id = @id;";
-            NpgsqlCommand cmd = new(cmdText, connection);
-            cmd.Parameters.AddWithValue("@name", entity.FullName);
-            cmd.Parameters.AddWithValue("@birth_date", entity.BirthDate);
-            cmd.Parameters.AddWithValue("@gender", entity.Gender);
-            cmd.Parameters.AddWithValue("@id", entity.StudentId);
-
-            int res = await cmd.ExecuteNonQueryAsync();
-            if (res > 0)
+            try
             {
-                Console.WriteLine(entity.FullName + " updated succesfully");
-                return true;
+                using NpgsqlConnection connection = new(_connectionString);
+                connection.Open();
+                string cmdText = @"update student set student_name=@name, birth_date=@birth_date, gender=@gender
+                               where student_id = @id;";
+                NpgsqlCommand cmd = new(cmdText, connection);
+                cmd.Parameters.AddWithValue("@name", entity.FullName);
+                cmd.Parameters.AddWithValue("@birth_date", entity.BirthDate);
+                cmd.Parameters.AddWithValue("@gender", entity.Gender);
+                cmd.Parameters.AddWithValue("@id", entity.StudentId);
+
+                int res = await cmd.ExecuteNonQueryAsync();
+                if (res > 0)
+                {
+                   
+                    return true;
+                }
+                
+                return false;
             }
-            Console.WriteLine(entity.FullName + " update failed");
-            return false;
+            catch (Exception exception)
+            {
+
+                Console.WriteLine(exception);
+                return false;
+            }
         }
     }
 }

@@ -1,21 +1,16 @@
 ﻿using Domein.Models;
 using Npgsql;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Persistence
 {
     public class DbTeacher : IRepasitory<Teacher>
     {
         private readonly string _connectionString = KundalikDbContext.conString;
-        public async Task Create(Teacher obj)
+        public async Task<bool> AddAsync(Teacher obj)
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
-            string cmdText = @"insert into teacher(full_name, birth_date, gender)
+            string cmdText = @"insert into teacher(teacher_name, birth_date, gender)
                             values(@name, @birth_date, @gender)";
             NpgsqlCommand cmd = new(cmdText, connection);
             cmd.Parameters.AddWithValue("@name", obj.FullName);
@@ -25,24 +20,42 @@ namespace Infrastructure.Persistence
             int res = await cmd.ExecuteNonQueryAsync();
             if (res > 0)
             {
-                Console.WriteLine(obj.FullName + " added sucsesfully");
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<bool> AddRageAsync(List<Teacher> obj)
+        {
+            try
+            {
+                foreach (Teacher teach in obj)
+                {
+                    await AddAsync(teach);
+                }
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return false;
             }
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
-            string cmdText = @"dalete from teacher where teacher_id = @id";
+            string cmdText = @"delete from teacher where teacher_id = @id";
             NpgsqlCommand command = new(cmdText, connection);
             command.Parameters.AddWithValue("@id", id);
 
             int res = await command.ExecuteNonQueryAsync();
             if (res > 0)
             {
-                Console.WriteLine("Delete succesfully");
+                return true;
             }
-            else Console.WriteLine("Delted failed");
+            else return false;
         }
 
         public async Task<IEnumerable<Teacher>> GetAllAsync()
@@ -60,14 +73,14 @@ namespace Infrastructure.Persistence
                 {
                     TeacherId = (int)reader["teacher_id"],
                     FullName = reader["teacher_name"]?.ToString(),
-                    BirthDate = DateOnly.Parse(reader["birth_date"]?.ToString()),
+                    BirthDate = DateTime.Parse(reader["birth_date"]?.ToString()),
                     Gender = (bool)reader["gender"]
                 });
             }
             return teachers;
         }
 
-        public async Task<Teacher> GetAsync(int id)
+        public async Task<Teacher> GetByIdAsync(int id)
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
@@ -76,14 +89,17 @@ namespace Infrastructure.Persistence
             cmd.Parameters.AddWithValue("@id", id);
 
             NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
-
-            Teacher teacher = new()
+            Teacher? teacher = null;
+            while (reader.Read())
             {
-                TeacherId = (int)reader["teacher_id"],
-                FullName = reader["teacher_name"].ToString(),
-                BirthDate = DateOnly.Parse(reader["birth_date"].ToString()),
-                Gender = (bool)reader["gender"]
-            };
+                 teacher = new ()
+                {
+                    TeacherId = (int)reader["teacher_id"],
+                    FullName = reader["teacher_name"].ToString(),
+                    BirthDate = DateTime.Parse(reader["birth_date"].ToString()),
+                    Gender = (bool)reader["gender"]
+                };
+            }
 
             return teacher;
         }
@@ -92,7 +108,7 @@ namespace Infrastructure.Persistence
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
-            string cmdText = @"update teacher set full_name=@name, birth_date=@birth_date, gender=@gender
+            string cmdText = @"update teacher set teacher_name=@name, birth_date=@birth_date, gender=@gender
                                where teacher_id = @id;";
             NpgsqlCommand cmd = new(cmdText, connection);
             cmd.Parameters.AddWithValue("@name", entity.FullName);
@@ -103,10 +119,8 @@ namespace Infrastructure.Persistence
             int res = await cmd.ExecuteNonQueryAsync();
             if (res > 0)
             {
-                Console.WriteLine(entity.FullName + " updated succesfully");
                 return true;
             }
-            Console.WriteLine(entity.FullName + " update failed");
             return false;
         }
     }

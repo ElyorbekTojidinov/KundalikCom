@@ -1,18 +1,13 @@
 ﻿using Domein.Models;
 using Npgsql;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Persistence
 {
-    internal class DbSubject : IRepasitory<Subject>
+    public class DbSubject : IRepasitory<Subject>
     {
         private readonly string _connectionString = KundalikDbContext.conString;
 
-        public async Task Create(Subject obj)
+        public async Task<bool> AddAsync(Subject obj)
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
@@ -20,15 +15,34 @@ namespace Infrastructure.Persistence
                             values(@subject_name)";
             NpgsqlCommand cmd = new(cmdText, connection);
             cmd.Parameters.AddWithValue("@subject_name", obj.SubjectName);
-           
+
             int res = await cmd.ExecuteNonQueryAsync();
             if (res > 0)
             {
-                Console.WriteLine(" added sucsesfully");
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<bool> AddRageAsync(List<Subject> obj)
+        {
+            try
+            {
+                foreach (Subject subjects in obj)
+                {
+                    await AddAsync(subjects);
+                }
+                return true;
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return false;
             }
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
@@ -39,9 +53,9 @@ namespace Infrastructure.Persistence
             int res = await command.ExecuteNonQueryAsync();
             if (res > 0)
             {
-                Console.WriteLine("Delete succesfully");
+                return true;
             }
-            else Console.WriteLine("Delted failed");
+            else return false;
         }
 
         public async Task<IEnumerable<Subject>> GetAllAsync()
@@ -64,7 +78,7 @@ namespace Infrastructure.Persistence
             return subjects;
         }
 
-        public async Task<Subject> GetAsync(int id)
+        public async Task<Subject> GetByIdAsync(int id)
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
@@ -73,12 +87,15 @@ namespace Infrastructure.Persistence
             cmd.Parameters.AddWithValue("@id", id);
 
             NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
-
-            Subject teacher = new()
+            Subject? teacher = null;
+            while (reader.Read())
             {
-                SubjectId = (int)reader["subject_id"],
-                SubjectName = reader["subject_name"]?.ToString()
-            };
+                teacher = new Subject()
+                {
+                    SubjectId = (int)reader["subject_id"],
+                    SubjectName = reader["subject_name"]?.ToString()
+                };
+            }
 
             return teacher;
         }
@@ -96,10 +113,8 @@ namespace Infrastructure.Persistence
             int res = await cmd.ExecuteNonQueryAsync();
             if (res > 0)
             {
-                Console.WriteLine(entity.SubjectName + " updated succesfully");
                 return true;
             }
-            Console.WriteLine(entity.SubjectName + " update failed");
             return false;
         }
     }

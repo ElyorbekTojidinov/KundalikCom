@@ -66,7 +66,7 @@ namespace KundalikCom.UI_Form
         
             Grade grd = new()
             {
-                StudentTeacherId = await StudetTeacherTest.GetByIdAsync(stId),
+                StudentTeacherId = await StudentTeacherTest.GetByIdAsync(stId),
                 Date= DateTime.Now,
                 GradeEnum = Enum.Parse<GradeEnum>(grade)
             };
@@ -132,7 +132,7 @@ namespace KundalikCom.UI_Form
 
             Grade grd = new()
             {
-                StudentTeacherId = await StudetTeacherTest.GetByIdAsync(stId),
+                StudentTeacherId = await StudentTeacherTest.GetByIdAsync(stId),
                 Date = DateTime.Now,
                 GradeEnum = Enum.Parse<GradeEnum>(grade)
             };

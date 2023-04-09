@@ -8,14 +8,22 @@ namespace KundalikCom
     {
         static void Main(string[] args)
         {
-           // Student_UI.Run();
-           Teacher_UI.Run();
+            // Student_UI.Run();  // ok
+            //Teacher_UI.Run();  // ok
+            //Subject_UI.Run(); // ok
+            //Grade_UI.Run();
+            StudentTeacher_UI.Run();
 
             //Run();
 
         }
         public async static void Run()
         {
+
+
+
+
+
             //KundalikDbContext.CerateDb();
             // KundalikDbContext.
            // DbStudents stDb = new DbStudents();
@@ -40,5 +48,6 @@ namespace KundalikCom
            //     Console.WriteLine(item);
            // }
         }
+        
     }
 }

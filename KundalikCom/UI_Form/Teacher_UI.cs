@@ -33,6 +33,7 @@ namespace KundalikCom.UI_Form
 
                 default: goto numKey;
             }
+            Console.ReadKey();
         }
         public static async void AddTeacher()
         {

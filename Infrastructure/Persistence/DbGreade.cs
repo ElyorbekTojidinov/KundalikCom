@@ -20,7 +20,7 @@ namespace Infrastructure.Persistence
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
             string cmdText = @"insert into grade(grade_rate,grade_date, student_teacher_id) 
-                    values (@name, @birth_date, @gender)";
+                    values (@grade_rate, @grade_date, @student_teacher_id)";
             NpgsqlCommand cmd = new(cmdText, connection);
             cmd.Parameters.AddWithValue("@grade_rate", obj.GradeEnum);
             cmd.Parameters.AddWithValue("@grade_date", obj.Date);

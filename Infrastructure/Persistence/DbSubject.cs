@@ -46,7 +46,7 @@ namespace Infrastructure.Persistence
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
-            string cmdText = @"dalete from subject where subject_id = @id";
+            string cmdText = @"delete from subject where subject_id = @id";
             NpgsqlCommand command = new(cmdText, connection);
             command.Parameters.AddWithValue("@id", id);
 
@@ -104,7 +104,7 @@ namespace Infrastructure.Persistence
         {
             using NpgsqlConnection connection = new(_connectionString);
             connection.Open();
-            string cmdText = @"update subject set subject_name=@name
+            string cmdText = @"update subject set subject_name=@subject_name
                                where subject_id = @id;";
             NpgsqlCommand cmd = new(cmdText, connection);
             cmd.Parameters.AddWithValue("@subject_name", entity.SubjectName);

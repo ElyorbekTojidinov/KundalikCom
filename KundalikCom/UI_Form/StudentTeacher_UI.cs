@@ -1,5 +1,6 @@
 ﻿using Aplication.CrudOperations;
 using Domein.Models;
+using Infrastructure.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace KundalikCom.UI_Form
             }
             switch (num)
             {
-                case 1: AddStudent(); break;
+                case 1: AddStudentTeacher(); break;
                 case 2: ReadAll(); break;
                 case 3: ReadById(); break;
                 case 4: Update(); break;
@@ -32,61 +33,55 @@ namespace KundalikCom.UI_Form
 
                 default: goto numKey;
             }
+            Console.ReadKey();
         }
+
+        private readonly static DbStudents dbStudents= new DbStudents();
+        private readonly static DbTeacher dbTeacher= new();
+        private readonly static DbSubject dbSubject= new();
+
         public static async void AddStudentTeacher()
         {
         namekey:
-            Console.WriteLine("Name: ");
-            string name = Console.ReadLine();
-            if (name == null)
+            Console.WriteLine("Student Id: ");
+            if(!int.TryParse(Console.ReadLine(), out int stdId))
             {
                 goto namekey;
             }
+            
         key:
-            Console.WriteLine("BirthDate: ");
-            if (!DateTime.TryParse(Console.ReadLine(), out DateTime birthDate))
+            Console.WriteLine("Teacher Id: ");
+            if (!int.TryParse(Console.ReadLine(), out int techId))
             {
                 goto key;
             }
-        genkey:
-            Console.WriteLine("Gender: ");
-            Console.WriteLine("1 Male");
-            Console.WriteLine("2 Female");
-            if (!byte.TryParse(Console.ReadLine(), out byte gen))
+            keySub:
+            Console.WriteLine("Subject Id: ");
+            if (!int.TryParse(Console.ReadLine(), out int subId))
             {
-                goto genkey;
-            }
-            bool gender;
-
-
-            switch (gen)
-            {
-                case 1: gender = true; break;
-                case 2: gender = false; break;
-                default: goto genkey;
+                goto keySub;
             }
 
-
-            Student std = new()
+            StudentTeacher st = new StudentTeacher
             {
-                FullName = name,
-                BirthDate = birthDate,
-                Gender = gender
+                StudentId = await  dbStudents.GetByIdAsync(stdId),
+                SubjectId = await dbSubject.GetByIdAsync(subId),
+                TeacherId = await dbTeacher.GetByIdAsync(techId)
             };
-
-            bool res = await StudentTest.AddStudentAsync(std);
+            bool res = await StudentTeacherTest.AddAsync(st);
 
             Methods.BoolMethod(res);
         }
 
         public static async void ReadAll()
         {
-            IEnumerable<Student> students = await StudentTest.GetAllAsync();
-            foreach (Student student in students)
+            IEnumerable<StudentTeacher> students = await StudentTeacherTest.GetAllAsync();
+            foreach (StudentTeacher student in students)
             {
                 Console.WriteLine(student);
             }
         }
+
         public static async void ReadById()
         {
         ret:
@@ -97,41 +92,32 @@ namespace KundalikCom.UI_Form
             }
             else
             {
-                Student std = await StudentTest.GetByIdAsync(id);
+                StudentTeacher std = await StudentTeacherTest.GetByIdAsync(id);
                 Console.WriteLine(std);
             }
         }
+
         public static async void Update()
         {
 
         namekey:
-            Console.WriteLine("Name: ");
-            string? name = Console.ReadLine();
-            if (name == null)
+            Console.WriteLine("Student Id: ");
+            if (!int.TryParse(Console.ReadLine(), out int stdId))
             {
                 goto namekey;
             }
+
         key:
-            Console.WriteLine("BirthDate: ");
-            if (!DateTime.TryParse(Console.ReadLine(), out DateTime birthDate))
+            Console.WriteLine("Teacher Id: ");
+            if (!int.TryParse(Console.ReadLine(), out int techId))
             {
                 goto key;
             }
-        genkey:
-            Console.WriteLine("Gender: ");
-            Console.WriteLine("1 Male");
-            Console.WriteLine("2 Female");
-            if (!byte.TryParse(Console.ReadLine(), out byte gen))
+        keySub:
+            Console.WriteLine("Subject Id: ");
+            if (!int.TryParse(Console.ReadLine(), out int subId))
             {
-                goto genkey;
-            }
-            bool gender;
-
-            switch (gen)
-            {
-                case 1: gender = true; break;
-                case 2: gender = false; break;
-                default: goto genkey;
+                goto keySub;
             }
         Idkey:
             Console.WriteLine("Id: ");
@@ -140,19 +126,19 @@ namespace KundalikCom.UI_Form
                 goto Idkey;
             }
 
-            Student std = new()
+            StudentTeacher st = new StudentTeacher
             {
-                StudentId = id,
-                FullName = name,
-                BirthDate = birthDate,
-                Gender = gender
+                Id = id,
+                StudentId = await dbStudents.GetByIdAsync(stdId),
+                SubjectId = await dbSubject.GetByIdAsync(subId),
+                TeacherId = await dbTeacher.GetByIdAsync(techId)
             };
-
-
-            bool res = await StudentTest.UpdateAsync(std);
+            
+            bool res = await StudentTeacherTest.UpdateAsync(st);
 
             Methods.BoolMethod(res);
         }
+
         public static async void DeleteStudent()
         {
         Idkey:
@@ -161,7 +147,7 @@ namespace KundalikCom.UI_Form
             {
                 goto Idkey;
             }
-            bool res = await StudentTest.StudentDeleteAsync(id);
+            bool res = await StudentTeacherTest.DeleteAsync(id);
 
             Methods.BoolMethod(res);
         }

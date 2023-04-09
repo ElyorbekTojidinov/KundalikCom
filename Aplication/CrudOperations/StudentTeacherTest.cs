@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Aplication.CrudOperations
 {
-    public class StudetTeacherTest
+    public class StudentTeacherTest
     {
         private static readonly KundalikDbContext _dbContext= new KundalikDbContext();
    
